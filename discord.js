@@ -2,10 +2,29 @@ let i = document.createElement("iframe");
 document.body.appendChild(i);
 window.dtoken = i.contentWindow.localStorage.token
 
+class Message {
+    constructor(cid, id, content, author, member, mentions) {
+        this.channel = new Channel(cid)
+        this.content = content
+        this.id = id;
+        this.author = author
+        this.author.member = member
+        this.mentions = mentions
+    }
+}
+
+class Channel {
+    constructor(id) {
+        this.id = id;
+    }
+}
+
 class selfbot {
     constructor() {
         this.events = {};
     }
+    static Message = Message
+    static Channel = Channel
     util = {
         sleep(s) {
             return new Promise(resolve => setTimeout(resolve, s*1000));
@@ -76,10 +95,11 @@ class selfbot {
         window.JSON.parse = new Proxy(JSON.parse, {
             apply: (target, that, args) => {
                 let data = window._e_(...args)
+                let msg = data.d
                 if (!data.t) return target(...args)
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
-                        this.emit('message', data.d)
+                        this.emit('message', new selfbot.Message(msg.channel_id, msg.id, msg.content, msg.author, msg.member, msg.mentions))
                         break
                     case 'READY':
                         this.user = data.d.user
