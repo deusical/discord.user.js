@@ -3,13 +3,17 @@ document.body.appendChild(i);
 window.dtoken = i.contentWindow.localStorage.token
 
 class Message {
-    constructor(cid, id, content, author, member, mentions) {
-        this.channel = new Channel(cid)
-        this.content = content
-        this.id = id;
-        this.author = author
-        this.author.member = member
-        this.mentions = mentions
+    constructor(msg) {
+        this.guild = new Guild(msg.guild_id)
+        this.channel = new Channel(msg.channel_id)
+        this.content = msg.content
+        this.id = msg.id;
+        this.author = msg.author
+        this.author.member = msg.member
+        this.mentions = msg.mentions
+        this.mentions.roles = msg.mention_roles
+        this.attachments = msg.attachments
+        this.embeds = msg.embeds
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
@@ -43,6 +47,12 @@ class Channel {
                 reject(e)
             })
         })
+    }
+}
+
+class Guild {
+    constructor(id) {
+        this.id = id;
     }
 }
 
@@ -135,7 +145,7 @@ class selfbot {
                 if (!data.t) return target(...args)
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
-                        this.emit('message', new selfbot.Message(msg.channel_id, msg.id, msg.content, msg.author, msg.member, msg.mentions))
+                        this.emit('message', new selfbot.Message(msg))
                         break
                     case 'READY':
                         this.user = data.d.user
