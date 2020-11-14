@@ -37,13 +37,10 @@ class selfbot {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(body)
-            }).then(res => {
+            }).then(res => res.text()).then(res => {
                 try {
-                    res.json()
-                } catch(e) {
-                    res.text()
-                }
-            }).then(res => {
+                    res = window._e_(res)
+                } catch(e) {}
                 resolve(res)
             }).catch(err => {
                 reject(err)
