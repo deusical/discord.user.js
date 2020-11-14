@@ -12,12 +12,12 @@ class Message {
         this.mentions = mentions
     }
     edit(cfg) {
-        selfbot.route('patch', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).catch(e => {
+        selfbot.route('PATCH', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).catch(e => {
             throw new Error(e)
         })
     }
     delete() {
-        selfbot.route('delete', `/v8/channels/${this.channel.id}/messages/${this.id}`).catch(e => {
+        selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).catch(e => {
             throw new Error(e)
         })
     }
