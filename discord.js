@@ -29,7 +29,7 @@ class selfbot {
         this.events = {};
     }
     static route(method, url, body) {
-        return new Promise((resolve, reject) {
+        return new Promise((resolve, reject) => {
             fetch("https://discord.com/api"+url, {
                 method: method,
                 headers: {
