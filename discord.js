@@ -37,7 +37,7 @@ class Channel {
     }
     send(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('POST', `/v8/channels/${this.channel.id}/messages`, cfg).then(r => {
+            selfbot.route('POST', `/v8/channels/${this.id}/messages`, cfg).then(r => {
                 resolve(r)
             }).catch(e => {
                 throw new Error(e)
