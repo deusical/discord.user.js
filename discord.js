@@ -79,7 +79,7 @@ class selfbot {
                 if (!data.t) return target(...args)
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
-                        this.emit('message', data)
+                        this.emit('message', data.d)
                         break
                     case 'READY':
                         this.user = data.d.user
