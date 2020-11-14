@@ -50,10 +50,10 @@ class selfbot {
                 if (!data.t) return target(...args)
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
-                        selfbot.emit('message', data.d)
+                        this.emit('message', data.d)
                         break
                     default:
-                        selfbot.emit(data.t.toLowerCase(), data.d)
+                        this.emit(data.t.toLowerCase(), data.d)
                         break
                 }
                 return target(...args)
