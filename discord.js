@@ -16,7 +16,7 @@ class Message {
             selfbot.route('PATCH', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).then(r => {
                 resolve(r)
             }).catch(e => {
-                throw new Error(e)
+                reject(e)
             })
         })
     }
@@ -25,7 +25,7 @@ class Message {
             selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).then(r => {
                 resolve(r)
             }).catch(e => {
-                throw new Error(e)
+                reject(e)
             })
         })
     }
@@ -40,7 +40,7 @@ class Channel {
             selfbot.route('POST', `/v8/channels/${this.id}/messages`, cfg).then(r => {
                 resolve(r)
             }).catch(e => {
-                throw new Error(e)
+                reject(e)
             })
         })
     }
