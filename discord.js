@@ -11,6 +11,11 @@ class Message {
         this.author.member = member
         this.mentions = mentions
     }
+    delete() {
+        selfbot.route('delete', `/v8/channels/${this.cid}/messages/${this.id}`).catch(e => {
+            throw new Error(e)
+        })
+    }
 }
 
 class Channel {
@@ -22,6 +27,28 @@ class Channel {
 class selfbot {
     constructor() {
         this.events = {};
+    }
+    static route(method, url, body) {
+        return new Promise((resolve, reject) {
+            fetch("https://discord.com/api"+url, {
+                method: method,
+                headers: {
+                    "Authorization": window.dtoken.replaceAll('\"', ''),
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            }).then(res => {
+                try {
+                    res.json()
+                } catch(e) {
+                    res.text()
+                }
+            }).then(res => {
+                resolve(res)
+            }).catch(err => {
+                reject(err)
+            })
+        })
     }
     static Message = Message
     static Channel = Channel
