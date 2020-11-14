@@ -6,6 +6,35 @@ class selfbot {
     constructor() {
         this.events = {};
     }
+    util = {
+        sleep(s) {
+            return new Promise(resolve => setTimeout(resolve, s*1000));
+        },
+        randint(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        },
+        randarr(arr) {
+            return arr[Math.floor(Math.random() * arr.length)]
+        },
+        downloadString(text, fileType, fileName) {
+            let blob = new Blob([text], { type: fileType });
+            let a = document.createElement('a');
+            a.download = fileName;
+            a.href = URL.createObjectURL(blob);
+            a.dataset.downloadurl = [fileType, a.download, a.href].join(':');
+            a.style.display = "none";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
+        },
+        queryReactClass: (cls, parent) => (parent || document).querySelector(`[class*="${cls}-"]`),
+        queryReactClassAll: (cls, parent) => (parent || document).querySelectorAll(`[class*="${cls}-"]`),
+        getGid: () => location.href.replace('https://discord.com', '').replace('http://discord.com', '').split('/')[2],
+        getCid: () => location.href.replace('https://discord.com', '').replace('http://discord.com', '').split('/')[3],
+    }
     on(event, listener) {
         if (typeof this.events[event] !== 'object') {
             this.events[event] = [];
@@ -34,9 +63,9 @@ class selfbot {
     }
     sendMsg(cid, cfg) {
         fetch(`https://discord.com/api/v8/channels/${cid}/messages`, {
-            method: 'post',
+            method: 'POST',
             headers: {
-                "Authorization": window.dtoken,
+                "Authorization": window.dtoken.replaceAll('\"', ''),
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(cfg)
