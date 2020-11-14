@@ -12,13 +12,21 @@ class Message {
         this.mentions = mentions
     }
     edit(cfg) {
-        selfbot.route('PATCH', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).catch(e => {
-            throw new Error(e)
+        return new Promise((resolve, reject) => {
+            selfbot.route('PATCH', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).then(r => {
+                resolve(r)
+            }).catch(e => {
+                throw new Error(e)
+            })
         })
     }
     delete() {
-        selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).catch(e => {
-            throw new Error(e)
+        return new Promise((resolve, reject) => {
+            selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).then(r => {
+                resolve(r)
+            }).catch(e => {
+                throw new Error(e)
+            })
         })
     }
 }
@@ -26,6 +34,15 @@ class Message {
 class Channel {
     constructor(id) {
         this.id = id;
+    }
+    send(cfg) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('POST', `/v8/channels/${this.channel.id}/messages`, cfg).then(r => {
+                resolve(r)
+            }).catch(e => {
+                throw new Error(e)
+            })
+        })
     }
 }
 
@@ -108,16 +125,6 @@ class selfbot {
             remove();
             listener.apply(this, args);
         });
-    }
-    sendMsg(cid, cfg) {
-        fetch(`https://discord.com/api/v8/channels/${cid}/messages`, {
-            method: 'POST',
-            headers: {
-                "Authorization": window.dtoken.replaceAll('\"', ''),
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(cfg)
-        })
     }
     run() {
         window._e_ = JSON.parse
