@@ -12,7 +12,7 @@ class Message {
         this.mentions = mentions
     }
     delete() {
-        selfbot.route('delete', `/v8/channels/${this.cid}/messages/${this.id}`).catch(e => {
+        selfbot.route('delete', `/v8/channels/${this.channel.id}/messages/${this.id}`).catch(e => {
             throw new Error(e)
         })
     }
