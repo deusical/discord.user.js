@@ -81,6 +81,11 @@ class selfbot {
                     case 'MESSAGE_CREATE':
                         this.emit('message', data.d)
                         break
+                    case 'READY':
+                        this.user = data.d.user
+                        this.data = data.d
+                        this.emit('ready', data.d)
+                        break
                     default:
                         this.emit(data.t.toLowerCase(), data.d)
                         break
