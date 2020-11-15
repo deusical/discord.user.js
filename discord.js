@@ -53,6 +53,11 @@ class Channel {
 class Guild {
     constructor(id) {
         this.id = id;
+        selfbot.route('GET', `/v8/guilds/${this.id}`).then(r => {
+            Object.keys(r).forEach(d => {
+                this[d] = r[d]
+            })
+        })
     }
 }
 
