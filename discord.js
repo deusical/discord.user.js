@@ -2,6 +2,11 @@ let i = document.createElement("iframe");
 document.body.appendChild(i);
 window.dtoken = i.contentWindow.localStorage.token
 
+let cache = {
+    guilds: [],
+    channels: []
+}
+
 class Message {
     constructor(msg) {
         this.guild = new Guild(msg.guild_id)
