@@ -52,9 +52,9 @@ class Channel {
 
 class Guild {
     constructor(id) {
-        this.id = id;
+        this.d.id = id;
     }
-    get this() {
+    get d() {
         selfbot.route('GET', `/v8/guilds/${this.id}`).then(r => {
             return r
         })
