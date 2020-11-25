@@ -13,17 +13,47 @@ let cache = {
 
 class User {
     constructor(data) {
-        
+        for (let k of Object.keys(data)) {
+            this[k] = datapk
+        }
+        cache.users[data.id] = this
+    }
+    friend() {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PUT', `/v8/users/@me/relationships/${this.id}`, {}).then(r => {
+                resolve(new User(r))
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
+    unfriend() {
+        return new Promise((resolve, reject) => {
+            selfbot.route('DELETE', `/v8/users/@me/relationships/${this.id}`).then(r => {
+                resolve()
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
+    block() {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PUT', `/v8/users/@me/relationships/${this.id}`, {type: 2}).then(r => {
+                resolve()
+            }).catch(e => {
+                reject(e)
+            })
+        })
     }
 }
 
 class Member {
     constructor(data) {
         this.guildid = data.guild_id
-        for (let k of Object.keys(data.roles)) {
+        for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
-        if (cache.roles[data.role.id]) cache.roles[data.role.id] = this
+        cache.roles[data.role.id] = this
     }
 }
 
@@ -142,7 +172,7 @@ class Role {
         for (let k of Object.keys(data.roles)) {
             this[k] = data[k]
         }
-        if (cache.roles[data.role.id]) cache.roles[data.role.id] = this
+        cache.roles[data.role.id] = this
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
@@ -208,6 +238,8 @@ class selfbot {
     }
     static Message = Message
     static Role = Role
+    static User = User
+    static Member = Member
     static TextChannel = TextChannel
     static VoiceChannel = VoiceChannel
     static Guild = Guild
@@ -350,8 +382,25 @@ class selfbot {
                         }
                         break
                     case 'CHANNEL_DELETE':
+                        if (cache.channels[msg.id]) {
+                            this.emit('guild_channel_delete', cache.channels[msg.id])
+                        } else {
+                            this.emit('guild_channel_delete', msg)
+                        }
                         break
-                    case 'CHANNEL_PINS_UPDATE':
+                    case 'GUILD_BAN_ADD':
+                        if (cache.users[msg.user.id]) {
+                            this.emit('guild_ban_add', msg.guild_id, cache.users[msg.user.id])
+                        } else {
+                            this.emit('guild_ban_add', msg.guild_id, new selfbot.User(msg.user))
+                        }
+                        break
+                    case 'GUILD_BAN_REMOVE':
+                        if (cache.users[msg.user.id]) {
+                            this.emit('guild_ban_remove', msg.guild_id, cache.useres[msg.user.id])
+                        } else {
+                            this.emit('guild_ban_remove', msg.guild_id, new selfbot.User(msg.user))
+                        }
                         break
                     case 'READY':
                         this.user = data.d.user
