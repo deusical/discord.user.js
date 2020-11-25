@@ -69,10 +69,12 @@ class Channel {
         })
     }
     delete() {
-        selfbot.route('DELETE', `/v8/channels/${this.id}`).then(r => {
-            resolve(r)
-        }).catch(e => {
-            reject(e)
+        return new Promise((resolve, reject) => {
+            selfbot.route('DELETE', `/v8/channels/${this.id}`).then(r => {
+                resolve(r)
+            }).catch(e => {
+                reject(e)
+            })
         })
     }
 }
@@ -88,10 +90,12 @@ class Guild {
         cache.guilds[id] = this
     }
     createChannel(cfg) {
-        selfbot.route('POST', `/v8/guilds/${this.id}/channels`, cfg).then(r => {
-            resolve(new Channel(r.id))
-        }).catch(e => {
-            reject(e)
+        return new Promise((resolve, reject) => {
+            selfbot.route('POST', `/v8/guilds/${this.id}/channels`, cfg).then(r => {
+                resolve(new Channel(r.id))
+            }).catch(e => {
+                reject(e)
+            })
         })
     }
 }
