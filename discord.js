@@ -5,6 +5,19 @@ window.dtoken = i.contentWindow.localStorage.token.replaceAll('\"', '')
 let cache = {
     guilds: {},
     channels: {},
+    messages: {},
+    roles: {},
+    users: {}
+}
+
+class User {
+    constructor(data) {
+        
+    }
+}
+
+class Member {
+
 }
 
 class Message {
@@ -19,6 +32,7 @@ class Message {
         this.mentions.roles = msg.mention_roles
         this.attachments = msg.attachments
         this.embeds = msg.embeds
+        cache.messages[msg.id] = this
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
@@ -40,7 +54,7 @@ class Message {
     }
 }
 
-class Channel {
+class TextChannel {
     constructor(id) {
         this.id = id;
         selfbot.route('GET',  `/v8/channels/${id}`).then(r=>{
@@ -62,7 +76,7 @@ class Channel {
     edit(cfg) {
         return new Promise((resolve, reject) => {
             selfbot.route('PATCH', `/v8/channels/${this.id}`, cfg).then(r => {
-                resolve(new Channel(r.id))
+                resolve(new TextChannel(r.id))
             }).catch(e => {
                 reject(e)
             })
@@ -79,6 +93,18 @@ class Channel {
     }
 }
 
+class VoiceChannel {
+    constructor(id) {
+        this.id = id;
+        selfbot.route('GET',  `/v8/channels/${id}`).then(r=>{
+            for (let k of Object.keys(r)) {
+                this[k] = r[k]
+            }
+        })
+        cache.channels[id] = this
+    }
+}
+
 class Guild {
     constructor(id) {
         this.id = id;
@@ -86,17 +112,27 @@ class Guild {
             for (let k of Object.keys(r)) {
                 this[k] = r[k]
             }
+            for (let i = 0;i<this.roles.length;i++) {
+                this.roles[i] = new Role(this.roles[i])
+            }
         })
         cache.guilds[id] = this
     }
     createChannel(cfg) {
         return new Promise((resolve, reject) => {
             selfbot.route('POST', `/v8/guilds/${this.id}/channels`, cfg).then(r => {
-                resolve(new Channel(r.id))
+                resolve(cfg.type == 0 ? new TextChannel(r.id) : (cfg.type == 2 ? new VoiceChannel(r.id) : null))
             }).catch(e => {
                 reject(e)
             })
         })
+    }
+}
+
+class Role {
+    constructor(data) {
+        this.id = data.id;
+        cache.roles[data.id] = this
     }
 }
 
@@ -143,7 +179,9 @@ class selfbot {
         })
     }
     static Message = Message
-    static Channel = Channel
+    static TextChannel = TextChannel
+    static VoiceChannel = VoiceChannel
+    static Guild = Guild
     static util = {
         sleep(s) {
             return new Promise(resolve => setTimeout(resolve, s*1000));
@@ -209,6 +247,51 @@ class selfbot {
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
                         this.emit('message', new selfbot.Message(msg))
+                        break
+                    case 'MESSAGE_UPDATE':
+                        if (cache.messages[msg.id]) {
+                            let old = cache.messages[msg.id]
+                            for (let k of Object.keys(msg)) {
+                                cache.messages[msg.id][k] = msg[k]
+                            }
+                            this.emit('message_update', old, cache.messages[msg.id][k])
+                        } else {
+                            this.emit('message_update', null, new selfbot.Message(msg))
+                        }
+                        break
+                    case 'MESSAGE_DELETE':
+                        if (cache.messages[msg.id]) {
+                            this.emit('message_delete', cache.messages[msg.id])
+                        } else {
+                            this.emit('message_delete', msg)
+                        }
+                        break
+                    case 'GUILD_CREATE':
+                        this.emit('guild_create', new selfbot.Guild(msg.id))
+                        break
+                    case 'GUILD_UPDATE':
+                        if (cache.guilds[msg.id]) {
+                            let old = cache.guilds[msg.id]
+                            for (let k of Object.keys(msg)) {
+                                cache.guilds[msg.id][k] = msg[k]
+                            }
+                            this.emit('message_update', old, cache.guilds[msg.id][k])
+                        } else {
+                            this.emit('message_update', null, new selfbot.Guild(msg.id))
+                        }
+                        break
+                    case 'GUILD_DELETE':
+                        if (cache.guilds[msg.id]) {
+                            this.emit('message_delete', cache.guilds[msg.id])
+                        } else {
+                            this.emit('message_delete', msg)
+                        }
+                        break
+                    case 'GUILD_ROLE_CREATE':
+                        break
+                    case 'GUILD_ROLE_UPDATE':
+                        break
+                    case 'GUILD_ROLE_DELETE':
                         break
                     case 'READY':
                         this.user = data.d.user
