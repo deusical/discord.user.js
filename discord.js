@@ -1,16 +1,16 @@
 let i = document.createElement("iframe");
 document.body.appendChild(i);
-window.dtoken = i.contentWindow.localStorage.token
+window.dtoken = i.contentWindow.localStorage.token.replaceAll('\"', '')
 
 let cache = {
-    guilds: [],
-    channels: []
+    guilds: {},
+    channels: {},
 }
 
 class Message {
     constructor(msg) {
-        this.guild = new Guild(msg.guild_id)
-        this.channel = new Channel(msg.channel_id)
+        this.guild = cache[msg.guild_id] ? cache[msg.guild_id] : new Guild(msg.guild_id)
+        this.channel = cache[msg.channel_id] ? cache[msg.channel_id] : new Channel(msg.channel_id)
         this.content = msg.content
         this.id = msg.id;
         this.author = msg.author
@@ -31,7 +31,7 @@ class Message {
     }
     delete() {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).then(r => {
+            selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).then(async r => {
                 resolve(r)
             }).catch(e => {
                 reject(e)
@@ -43,6 +43,11 @@ class Message {
 class Channel {
     constructor(id) {
         this.id = id;
+        selfbot.route('GET',  `/v8/channels/${id}`).then(r=>{
+            for (let k of Object.keys(r)) {
+                this[k] = r[k]
+            }
+        })
     }
     send(cfg) {
         return new Promise((resolve, reject) => {
@@ -58,10 +63,10 @@ class Channel {
 class Guild {
     constructor(id) {
         this.id = id;
-    }
-    get d() {
-        selfbot.route('GET', `/v8/guilds/${this.id}`).then(r => {
-            return r
+        selfbot.route('GET',  `/v8/guilds/${id}`).then(r=>{
+            for (let k of Object.keys(r)) {
+                this[k] = r[k]
+            }
         })
     }
 }
@@ -75,15 +80,34 @@ class selfbot {
             fetch("https://discord.com/api"+url, {
                 method: method,
                 headers: {
-                    "Authorization": window.dtoken.replaceAll('\"', ''),
+                    "Authorization": window.dtoken,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(body)
-            }).then(res => res.text()).then(res => {
+            }).then(res => res.text()).then(async res => {
                 try {
                     res = window._e_(res)
                 } catch(e) {}
-                resolve(res)
+                if (res.retry_after) {
+                    await selfbot.util.sleep(res.retry_after)
+                    fetch("https://discord.com/api"+url, {
+                        method: method,
+                        headers: {
+                            "Authorization": window.dtoken,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(body)
+                    }).then(res => res.text()).then(async res => {
+                        try {
+                            res = window._e_(res)
+                        } catch(e) {}
+                        resolve(res)
+                    }).catch(err => {
+                        reject(err)
+                    })
+                } else {
+                    resolve(res)
+                }
             }).catch(err => {
                 reject(err)
             })
@@ -91,7 +115,7 @@ class selfbot {
     }
     static Message = Message
     static Channel = Channel
-    util = {
+    static util = {
         sleep(s) {
             return new Promise(resolve => setTimeout(resolve, s*1000));
         },
