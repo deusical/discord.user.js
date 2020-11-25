@@ -9,8 +9,8 @@ let cache = {
 
 class Message {
     constructor(msg) {
-        this.guild = cache[msg.guild_id] ? cache[msg.guild_id] : new Guild(msg.guild_id)
-        this.channel = cache[msg.channel_id] ? cache[msg.channel_id] : new Channel(msg.channel_id)
+        this.guild = cache.guilds[msg.guild_id] ? cache.guilds[msg.guild_id] : new Guild(msg.guild_id)
+        this.channel = cache.channels[msg.channel_id] ? cache.channels[msg.channel_id] : new Channel(msg.channel_id)
         this.content = msg.content
         this.id = msg.id;
         this.author = msg.author
@@ -48,6 +48,7 @@ class Channel {
                 this[k] = r[k]
             }
         })
+        cache.channels[id] = this
     }
     send(cfg) {
         return new Promise((resolve, reject) => {
@@ -56,6 +57,22 @@ class Channel {
             }).catch(e => {
                 reject(e)
             })
+        })
+    }
+    edit(cfg) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PATCH', `/v8/channels/${this.id}`, cfg).then(r => {
+                resolve(new this(r.id))
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
+    delete() {
+        selfbot.route('DELETE', `/v8/channels/${this.id}`).then(r => {
+            resolve(r)
+        }).catch(e => {
+            reject(e)
         })
     }
 }
@@ -67,6 +84,14 @@ class Guild {
             for (let k of Object.keys(r)) {
                 this[k] = r[k]
             }
+        })
+        cache.guilds[id] = this
+    }
+    createChannel(cfg) {
+        selfbot.route('POST', `/v8/guilds/${this.id}/channels`, cfg).then(r => {
+            resolve(new Channel(r.id))
+        }).catch(e => {
+            reject(e)
         })
     }
 }
