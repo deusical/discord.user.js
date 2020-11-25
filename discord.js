@@ -62,7 +62,7 @@ class Channel {
     edit(cfg) {
         return new Promise((resolve, reject) => {
             selfbot.route('PATCH', `/v8/channels/${this.id}`, cfg).then(r => {
-                resolve(new this(r.id))
+                resolve(new Channel(r.id))
             }).catch(e => {
                 reject(e)
             })
