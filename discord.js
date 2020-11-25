@@ -7,6 +7,7 @@ let cache = {
     channels: {},
     messages: {},
     roles: {},
+    members: {},
     users: {}
 }
 
@@ -131,8 +132,29 @@ class Guild {
 
 class Role {
     constructor(data) {
-        this.id = data.id;
-        cache.roles[data.id] = this
+        this.guildid = data.guild_id
+        for (let k of Object.keys(data.roles)) {
+            this[k] = data[k]
+        }
+        if (cache.roles[data.role.id]) cache.roles[data.role.id] = this
+    }
+    edit(cfg) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PATCH', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+                resolve(new Role(r))
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
+    delete() {
+        return new Promise((resolve, reject) => {
+            selfbot.route('DELETE', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+                resolve(new Role(r))
+            }).catch(e => {
+                reject(e)
+            })
+        })
     }
 }
 
@@ -179,6 +201,7 @@ class selfbot {
         })
     }
     static Message = Message
+    static Role = Role
     static TextChannel = TextChannel
     static VoiceChannel = VoiceChannel
     static Guild = Guild
@@ -288,6 +311,7 @@ class selfbot {
                         }
                         break
                     case 'GUILD_ROLE_CREATE':
+                        this.emit('guild_role_create', new selfbot.Role(msg))
                         break
                     case 'GUILD_ROLE_UPDATE':
                         break
