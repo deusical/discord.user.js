@@ -18,7 +18,13 @@ class User {
 }
 
 class Member {
-
+    constructor(data) {
+        this.guildid = data.guild_id
+        for (let k of Object.keys(data.roles)) {
+            this[k] = data[k]
+        }
+        if (cache.roles[data.role.id]) cache.roles[data.role.id] = this
+    }
 }
 
 class Message {
@@ -314,8 +320,38 @@ class selfbot {
                         this.emit('guild_role_create', new selfbot.Role(msg))
                         break
                     case 'GUILD_ROLE_UPDATE':
+                        if (cache.roles[msg.role.id]) {
+                            let old = cache.roles[msg.role.id]
+                            for (let k of Object.keys(msg.role)) {
+                                cache.roles[msg.role.id][k] = msg.role[k]
+                            }
+                            this.emit('guild_role_update', old, cache.roles[msg.role.id])
+                        } else {
+                            this.emit('guild_role_update', null, new selfbot.Role(msg))
+                        }
                         break
                     case 'GUILD_ROLE_DELETE':
+                        if (cache.roles[msg.role.id]) {
+                            this.emit('guild_role_delete', cache.roles[msg.role.id])
+                        } else {
+                            this.emit('guild_role_delete', msg)
+                        }
+                        break
+                    case 'CHANNEL_CREATE':
+                        this.emit('gulid_channel_create', type == 0 ? new TextChannel(msg.id) : (type == 2 ? new VoiceChannel(msg.id) : null))
+                        break
+                    case 'CHANNEL_UPDATE':
+                        if (cache.channels[msg.id]) {
+                            let old = cache.channels[msg.id]
+                            for (let k of Object.keys(msg)) {
+                                cache.channels[msg.id][k] = msg[k]
+                            }
+                            this.emit('guild_channel_update', old, cache.channels[msg.id])
+                        }
+                        break
+                    case 'CHANNEL_DELETE':
+                        break
+                    case 'CHANNEL_PINS_UPDATE':
                         break
                     case 'READY':
                         this.user = data.d.user
