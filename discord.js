@@ -73,6 +73,15 @@ class Member {
             })
         })
     }
+    edit(cfg) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PATCH', `/v8/guilds/${this.guildid}/members/${this.id}`, cfg).then(r => {
+                resolve()
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
 }
 
 class Message {
