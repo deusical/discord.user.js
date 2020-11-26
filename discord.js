@@ -53,7 +53,25 @@ class Member {
         for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
-        cache.roles[data.role.id] = this
+        cache.members[data.id] = this
+    }
+    ban(cfg) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('PUT', `/v8/guilds/${this.guildid}/bans/${this.id}`, cfg).then(r => {
+                resolve()
+            }).catch(e => {
+                reject(e)
+            })
+        })
+    }
+    kick(reason) {
+        return new Promise((resolve, reject) => {
+            selfbot.route('DELETE', `v8/guilds/${this.guildid}/members/${this.id}?reason=${reason ? reason : ""}`).then(r => {
+                resolve()
+            }).catch(e => {
+                reject(e)
+            })
+        })
     }
 }
 
