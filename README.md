@@ -16,4 +16,4 @@ client.on('message', console.log)
 client.run()
 ```
 You do not need to specify your discord token, as the userscript already stores it.
-I will write some documentation along with updating the script later.
+I will write some documentation on my website later.

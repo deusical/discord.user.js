@@ -87,7 +87,7 @@ class Member {
 class Message {
     constructor(msg) {
         this.guild = cache.guilds[msg.guild_id] ? cache.guilds[msg.guild_id] : new Guild(msg.guild_id)
-        this.channel = cache.channels[msg.channel_id] ? cache.channels[msg.channel_id] : new Channel(msg.channel_id)
+        this.channel = cache.channels[msg.channel_id] ? cache.channels[msg.channel_id] : new TextChannel(msg.channel_id)
         this.content = msg.content
         this.id = msg.id;
         this.author = new User(msg.author)
