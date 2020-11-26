@@ -48,8 +48,8 @@ class User {
 }
 
 class Member {
-    constructor(gid, data) {
-        this.guildid = gid
+    constructor(data) {
+        this.guildid = data.guild_id
         for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
@@ -91,7 +91,7 @@ class Message {
         this.content = msg.content
         this.id = msg.id;
         this.author = new User(msg.author)
-        this.author.member = new Member(msg.guild_id, msg.member)
+        if (msg.member) this.author.member = new Member(msg.member)
         this.mentions = msg.mentions
         this.mentions.roles = msg.mention_roles
         this.attachments = msg.attachments
@@ -196,10 +196,10 @@ class Guild {
 class Role {
     constructor(data) {
         this.guildid = data.guild_id
-        for (let k of Object.keys(data.roles)) {
+        for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
-        cache.roles[data.role.id] = this
+        cache.roles[data.id] = this
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
@@ -376,7 +376,7 @@ class selfbot {
                         }
                         break
                     case 'GUILD_ROLE_CREATE':
-                        this.emit('guild_role_create', new selfbot.Role(msg))
+                        this.emit('guild_role_create', new selfbot.Role(msg.role))
                         break
                     case 'GUILD_ROLE_UPDATE':
                         if (cache.roles[msg.role.id]) {
@@ -386,7 +386,7 @@ class selfbot {
                             }
                             this.emit('guild_role_update', old, cache.roles[msg.role.id])
                         } else {
-                            this.emit('guild_role_update', null, new selfbot.Role(msg))
+                            this.emit('guild_role_update', null, new selfbot.Role(msg.role))
                         }
                         break
                     case 'GUILD_ROLE_DELETE':
