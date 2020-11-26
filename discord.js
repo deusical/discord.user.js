@@ -177,6 +177,7 @@ class Guild {
                 this[k] = r[k]
             }
             for (let i = 0;i<this.roles.length;i++) {
+                this.roles[i].guildid = this.id
                 this.roles[i] = new Role(this.roles[i])
             }
         })
@@ -194,8 +195,8 @@ class Guild {
 }
 
 class Role {
-    constructor(data) {
-        this.guildid = data.guild_id
+    constructor(gid, data) {
+        this.guildid = gid
         for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
@@ -204,6 +205,7 @@ class Role {
     edit(cfg) {
         return new Promise((resolve, reject) => {
             selfbot.route('PATCH', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+                r.guildid = this.guildid
                 resolve(new Role(r))
             }).catch(e => {
                 reject(e)
@@ -213,6 +215,7 @@ class Role {
     delete() {
         return new Promise((resolve, reject) => {
             selfbot.route('DELETE', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+                r.guildid = this.guildid
                 resolve(new Role(r))
             }).catch(e => {
                 reject(e)
@@ -376,6 +379,7 @@ class selfbot {
                         }
                         break
                     case 'GUILD_ROLE_CREATE':
+                        msg.role.guildid = msg.guild_id
                         this.emit('guild_role_create', new selfbot.Role(msg.role))
                         break
                     case 'GUILD_ROLE_UPDATE':
