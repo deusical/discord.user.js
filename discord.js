@@ -90,8 +90,8 @@ class Message {
         this.channel = cache.channels[msg.channel_id] ? cache.channels[msg.channel_id] : new Channel(msg.channel_id)
         this.content = msg.content
         this.id = msg.id;
-        this.author = msg.author
-        this.author.member = msg.member
+        this.author = new User(msg.author)
+        this.author.member = new Member(msg.member)
         this.mentions = msg.mentions
         this.mentions.roles = msg.mention_roles
         this.attachments = msg.attachments
