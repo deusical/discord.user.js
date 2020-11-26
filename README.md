@@ -1,5 +1,7 @@
 # discord.user.js
 
+## CURRENTLY INDEV, AND I RANDOMLY PUSH, SO IT MIGHT BREAK SOMETIMES
+
 A discord selfbot userscript library. Cause why not?
 
 To setup, make a tampermonkey script and set
