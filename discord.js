@@ -16,6 +16,12 @@ class User {
         for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
+        this.name = data.username
+        this.discriminator = data.discriminator
+        this.tag = `${data.username}#${data.discriminator}`
+        this.flags = data.flags
+        this.id = data.id
+        this.avatar = data.avatar
         cache.users[data.id] = this
     }
     friend() {
@@ -47,12 +53,14 @@ class User {
     }
 }
 
-class Member {
+class Member extends User {
     constructor(data) {
         this.guildid = data.guild_id
-        for (let k of Object.keys(data)) {
-            this[k] = data[k]
-        }
+        this.roles = data.roles
+        this.mute = data.mute
+        this.joined_at = data.joined_at
+        this.hoisted_role = data.hoisted_role
+        this.deaf = data.deaf
         cache.members[data.id] = this
     }
     ban(cfg) {
@@ -91,7 +99,13 @@ class Message {
         this.content = msg.content
         this.id = msg.id;
         this.author = new User(msg.author)
-        if (msg.member) this.author.member = new Member(msg.member)
+        if (msg.member) {
+            let m = msg.author
+            for (let k of Object.keys(msg.member)) {
+                m[k] = msg.member[k]
+            }
+            this.author.member = new Member(m)
+        }
         this.mentions = msg.mentions
         this.mentions.roles = msg.mention_roles
         this.attachments = msg.attachments
@@ -177,8 +191,9 @@ class Guild {
                 this[k] = r[k]
             }
             for (let i = 0;i<this.roles.length;i++) {
-                this.roles[i].guildid = this.id
-                this.roles[i] = new Role(this.roles[i])
+                let nPog = this.roles[i]
+                nPog.guildid = this.id
+                this.roles[i] = new Role(nPog)
             }
         })
         cache.guilds[id] = this
@@ -197,9 +212,14 @@ class Guild {
 class Role {
     constructor(gid, data) {
         this.guildid = gid
-        for (let k of Object.keys(data)) {
-            this[k] = data[k]
-        }
+        this.position = data.position
+        this.permissions = data.permissions
+        this.name = data.name
+        this.mentionable = data.mentionable
+        this.managed = data.managed
+        this.id = data.id
+        this.hoist = data.hoist
+        this.color = data.color
         cache.roles[data.id] = this
     }
     edit(cfg) {
@@ -366,7 +386,7 @@ class selfbot {
                             for (let k of Object.keys(msg)) {
                                 cache.guilds[msg.id][k] = msg[k]
                             }
-                            this.emit('message_update', old, cache.guilds[msg.id][k])
+                            this.emit('message_update', old, cache.guilds[msg.id])
                         } else {
                             this.emit('message_update', null, new selfbot.Guild(msg.id))
                         }
