@@ -48,8 +48,8 @@ class User {
 }
 
 class Member {
-    constructor(data) {
-        this.guildid = data.guild_id
+    constructor(gid, data) {
+        this.guildid = gid
         for (let k of Object.keys(data)) {
             this[k] = data[k]
         }
@@ -91,7 +91,7 @@ class Message {
         this.content = msg.content
         this.id = msg.id;
         this.author = new User(msg.author)
-        this.author.member = new Member(msg.member)
+        this.author.member = new Member(msg.guild_id, msg.member)
         this.mentions = msg.mentions
         this.mentions.roles = msg.mention_roles
         this.attachments = msg.attachments
