@@ -14,7 +14,7 @@ let cache = {
 class User {
     constructor(data) {
         for (let k of Object.keys(data)) {
-            this[k] = datapk
+            this[k] = data[k]
         }
         cache.users[data.id] = this
     }
