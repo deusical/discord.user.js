@@ -342,7 +342,7 @@ class selfbot {
                             for (let k of Object.keys(msg)) {
                                 cache.messages[msg.id][k] = msg[k]
                             }
-                            this.emit('message_update', old, cache.messages[msg.id][k])
+                            this.emit('message_update', old, cache.messages[msg.id])
                         } else {
                             this.emit('message_update', null, new selfbot.Message(msg))
                         }
