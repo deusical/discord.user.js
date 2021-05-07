@@ -1,7 +1,3 @@
-let i = document.createElement("iframe");
-document.body.appendChild(i);
-window.dtoken = i.contentWindow.localStorage.token.replaceAll('\"', '')
-
 let cache = {
     guilds: {},
     channels: {},
@@ -13,9 +9,6 @@ let cache = {
 
 class User {
     constructor(data) {
-        for (let k of Object.keys(data)) {
-            this[k] = data[k]
-        }
         this.name = data.username
         this.discriminator = data.discriminator
         this.tag = `${data.username}#${data.discriminator}`
@@ -26,7 +19,7 @@ class User {
     }
     friend() {
         return new Promise((resolve, reject) => {
-            selfbot.route('PUT', `/v8/users/@me/relationships/${this.id}`, {}).then(r => {
+            selfbot.route('PUT', `/users/@me/relationships/${this.id}`, {}).then(r => {
                 resolve(new User(r))
             }).catch(e => {
                 reject(e)
@@ -35,7 +28,7 @@ class User {
     }
     unfriend() {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `/v8/users/@me/relationships/${this.id}`).then(r => {
+            selfbot.route('DELETE', `/users/@me/relationships/${this.id}`).then(r => {
                 resolve()
             }).catch(e => {
                 reject(e)
@@ -44,7 +37,7 @@ class User {
     }
     block() {
         return new Promise((resolve, reject) => {
-            selfbot.route('PUT', `/v8/users/@me/relationships/${this.id}`, {type: 2}).then(r => {
+            selfbot.route('PUT', `/users/@me/relationships/${this.id}`, {type: 2}).then(r => {
                 resolve()
             }).catch(e => {
                 reject(e)
@@ -54,8 +47,9 @@ class User {
 }
 
 class Member extends User {
-    constructor(data) {
-        this.guildid = data.guild_id
+    constructor(gid, data) {
+        super(data)
+        this.guildid = gid
         this.roles = data.roles
         this.mute = data.mute
         this.joined_at = data.joined_at
@@ -65,7 +59,7 @@ class Member extends User {
     }
     ban(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('PUT', `/v8/guilds/${this.guildid}/bans/${this.id}`, cfg).then(r => {
+            selfbot.route('PUT', `/guilds/${this.guildid}/bans/${this.id}`, cfg).then(r => {
                 resolve()
             }).catch(e => {
                 reject(e)
@@ -74,7 +68,7 @@ class Member extends User {
     }
     kick(reason) {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `v8/guilds/${this.guildid}/members/${this.id}?reason=${reason ? reason : ""}`).then(r => {
+            selfbot.route('DELETE', `/guilds/${this.guildid}/members/${this.id}?reason=${reason ? reason : ""}`).then(r => {
                 resolve()
             }).catch(e => {
                 reject(e)
@@ -83,7 +77,7 @@ class Member extends User {
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('PATCH', `/v8/guilds/${this.guildid}/members/${this.id}`, cfg).then(r => {
+            selfbot.route('PATCH', `/guilds/${this.guildid}/members/${this.id}`, cfg).then(r => {
                 resolve()
             }).catch(e => {
                 reject(e)
@@ -104,7 +98,7 @@ class Message {
             for (let k of Object.keys(msg.member)) {
                 m[k] = msg.member[k]
             }
-            this.author.member = new Member(m)
+            this.author.member = new Member(msg.guild_id, m)
         }
         this.mentions = msg.mentions
         this.mentions.roles = msg.mention_roles
@@ -114,7 +108,7 @@ class Message {
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('PATCH', `/v8/channels/${this.channel.id}/messages/${this.id}`, cfg).then(r => {
+            selfbot.route('PATCH', `/channels/${this.channel.id}/messages/${this.id}`, cfg).then(r => {
                 resolve(r)
             }).catch(e => {
                 reject(e)
@@ -123,7 +117,7 @@ class Message {
     }
     delete() {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `/v8/channels/${this.channel.id}/messages/${this.id}`).then(async r => {
+            selfbot.route('DELETE', `/channels/${this.channel.id}/messages/${this.id}`).then(async r => {
                 resolve(r)
             }).catch(e => {
                 reject(e)
@@ -135,7 +129,7 @@ class Message {
 class TextChannel {
     constructor(id) {
         this.id = id;
-        selfbot.route('GET',  `/v8/channels/${id}`).then(r=>{
+        selfbot.route('GET',  `/channels/${id}`).then(r=>{
             for (let k of Object.keys(r)) {
                 this[k] = r[k]
             }
@@ -144,7 +138,7 @@ class TextChannel {
     }
     send(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('POST', `/v8/channels/${this.id}/messages`, cfg).then(r => {
+            selfbot.route('POST', `/channels/${this.id}/messages`, cfg).then(r => {
                 resolve(r)
             }).catch(e => {
                 reject(e)
@@ -153,7 +147,7 @@ class TextChannel {
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('PATCH', `/v8/channels/${this.id}`, cfg).then(r => {
+            selfbot.route('PATCH', `/channels/${this.id}`, cfg).then(r => {
                 resolve(new TextChannel(r.id))
             }).catch(e => {
                 reject(e)
@@ -162,7 +156,7 @@ class TextChannel {
     }
     delete() {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `/v8/channels/${this.id}`).then(r => {
+            selfbot.route('DELETE', `/channels/${this.id}`).then(r => {
                 resolve(r)
             }).catch(e => {
                 reject(e)
@@ -174,7 +168,7 @@ class TextChannel {
 class VoiceChannel {
     constructor(id) {
         this.id = id;
-        selfbot.route('GET',  `/v8/channels/${id}`).then(r=>{
+        selfbot.route('GET',  `/channels/${id}`).then(r=>{
             for (let k of Object.keys(r)) {
                 this[k] = r[k]
             }
@@ -186,10 +180,39 @@ class VoiceChannel {
 class Guild {
     constructor(id) {
         this.id = id;
-        selfbot.route('GET',  `/v8/guilds/${id}`).then(r=>{
-            for (let k of Object.keys(r)) {
-                this[k] = r[k]
-            }
+        selfbot.route('GET',  `/guilds/${id}`).then(r=>{
+            this.afk_channel = r.afk_channel_id ? new VoiceChannel(r.afk_channel_id) : null
+            this.afk_timeout = r.afk_timeout
+            this.application_id = r.application_id
+            this.banner = r.banner
+            this.default_notifs = r.default_message_notifications
+            this.description = r.description
+            this.discovery_splash = r.discovery_splash
+            this.emojis = r.emojis
+            this.content_filter = r.explicit_content_filter
+            this.features = r.features
+            this.icon = r.icon
+            this.id = r.id
+            this.max_members = r.max_members
+            this.max_presences = r.max_presences
+            this.max_video_channel_users = r.max_video_channel_users
+            this.mfa_level = r.mfa_level
+            this.name = r.name
+            this.owner = r.owner_id ? new Member(r.owner_id) : null
+            this.locale = r.preferred_locale
+            this.boosts = r.premium_subscription_count
+            this.boost_tier = r.premium_tier
+            this.updates_channel = r.public_updates_channel_id ? new TextChannel(r.public_updates_channel_id) : null
+            this.region = r.region
+            this.roles = r.roles.map(role => new Role(role.id))
+            this.rules = r.rules_channel_id ? new TextChannel(rules_channel_id) : null
+            this.spash = r.splash
+            this.system_channel_flags = r.system_channel_flags
+            this.system_chanel = r.system_channel_id ? new TextChannel(r.system_channel_id) : null
+            this.vanity_url = r.vanity_url_code
+            this.verification_level = r.verification_level
+            this.widget_channel = r.widget_channel_id ? new TextChannel(r.widget_channel_id) : null
+            this.widgent_enabled = r.widgent_enabled
             for (let i = 0;i<this.roles.length;i++) {
                 let nPog = this.roles[i]
                 nPog.guildid = this.id
@@ -200,7 +223,7 @@ class Guild {
     }
     createChannel(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('POST', `/v8/guilds/${this.id}/channels`, cfg).then(r => {
+            selfbot.route('POST', `/guilds/${this.id}/channels`, cfg).then(r => {
                 resolve(cfg.type == 0 ? new TextChannel(r.id) : (cfg.type == 2 ? new VoiceChannel(r.id) : null))
             }).catch(e => {
                 reject(e)
@@ -210,8 +233,8 @@ class Guild {
 }
 
 class Role {
-    constructor(gid, data) {
-        this.guildid = gid
+    constructor(data) {
+        this.guildid = data.guildid
         this.position = data.position
         this.permissions = data.permissions
         this.name = data.name
@@ -224,7 +247,7 @@ class Role {
     }
     edit(cfg) {
         return new Promise((resolve, reject) => {
-            selfbot.route('PATCH', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+            selfbot.route('PATCH', `/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
                 r.guildid = this.guildid
                 resolve(new Role(r))
             }).catch(e => {
@@ -234,7 +257,7 @@ class Role {
     }
     delete() {
         return new Promise((resolve, reject) => {
-            selfbot.route('DELETE', `/v8/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
+            selfbot.route('DELETE', `/guilds/${this.guildid}/roles/${this.id}`, cfg).then(r => {
                 r.guildid = this.guildid
                 resolve(new Role(r))
             }).catch(e => {
@@ -247,13 +270,30 @@ class Role {
 class selfbot {
     constructor() {
         this.events = {};
+        this.read = false
+        this.init()
+    }
+    init() {
+        selfbot.util.waitUntil(() => window.webpackJsonp).then(() => {
+            let key;
+            var req = webpackJsonp.push([[], { extra_id: (e, t, r) => e.exports = r }, [["extra_id"]]]); for (let e in req.c)
+                if (req.c.hasOwnProperty(e)) {
+                    let t = req.c[e].exports; if (t && t.__esModule && t.default)
+                        for (let e in t.default) "getToken" === e && (key = t.default.getToken())
+                }
+            this.token = key
+            this.ready = true
+            window.token = this.token
+            window.ready = true
+            this.emit('ready')
+        })
     }
     static route(method, url, body) {
         return new Promise((resolve, reject) => {
-            fetch("https://discord.com/api"+url, {
+            fetch("https://discord.com/api/v9"+url, {
                 method: method,
                 headers: {
-                    "Authorization": window.dtoken,
+                    "Authorization": window.token,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(body)
@@ -266,7 +306,7 @@ class selfbot {
                     fetch("https://discord.com/api"+url, {
                         method: method,
                         headers: {
-                            "Authorization": window.dtoken,
+                            "Authorization": window.token,
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify(body)
@@ -317,6 +357,17 @@ class selfbot {
             document.body.removeChild(a);
             setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
         },
+        waitUntil(f) {
+            return new Promise(resolve => {
+                setInterval(() => {
+                    try {
+                        if (f()) {
+                            resolve();
+                        }
+                    } catch { }
+                }, 100);
+            });
+        },
         queryReactClass: (cls, parent) => (parent || document).querySelector(`[class*="${cls}-"]`),
         queryReactClassAll: (cls, parent) => (parent || document).querySelectorAll(`[class*="${cls}-"]`),
         getGid: () => location.href.replace('https://discord.com', '').replace('http://discord.com', '').split('/')[2],
@@ -354,9 +405,13 @@ class selfbot {
             apply: (target, that, args) => {
                 let data = window._e_(...args)
                 let msg = data.d
-                if (!data.t) return target(...args)
+                if (!data.t || !window.ready) return target(...args)
                 switch (data.t) {
                     case 'MESSAGE_CREATE':
+                        if (!msg.author) {
+                            console.log('No author.', msg)
+                            return target(...args)
+                        }
                         this.emit('message', new selfbot.Message(msg))
                         break
                     case 'MESSAGE_UPDATE':
@@ -386,16 +441,16 @@ class selfbot {
                             for (let k of Object.keys(msg)) {
                                 cache.guilds[msg.id][k] = msg[k]
                             }
-                            this.emit('message_update', old, cache.guilds[msg.id])
+                            this.emit('guild_update', old, cache.guilds[msg.id])
                         } else {
-                            this.emit('message_update', null, new selfbot.Guild(msg.id))
+                            this.emit('guild_update', null, new selfbot.Guild(msg.id))
                         }
                         break
                     case 'GUILD_DELETE':
                         if (cache.guilds[msg.id]) {
-                            this.emit('message_delete', cache.guilds[msg.id])
+                            this.emit('guild_delete', cache.guilds[msg.id])
                         } else {
-                            this.emit('message_delete', msg)
+                            this.emit('guild_delete', msg)
                         }
                         break
                     case 'GUILD_ROLE_CREATE':
@@ -403,19 +458,21 @@ class selfbot {
                         this.emit('guild_role_create', new selfbot.Role(msg.role))
                         break
                     case 'GUILD_ROLE_UPDATE':
-                        if (cache.roles[msg.role.id]) {
-                            let old = cache.roles[msg.role.id]
-                            for (let k of Object.keys(msg.role)) {
-                                cache.roles[msg.role.id][k] = msg.role[k]
+                        if (msg.role) {
+                            if (cache.roles[msg.role.id]) {
+                                let old = cache.roles[msg.role.id]
+                                for (let k of Object.keys(msg.role)) {
+                                    cache.roles[msg.role.id][k] = msg.role[k]
+                                }
+                                this.emit('guild_role_update', old, cache.roles[msg.role.id])
+                            } else {
+                                this.emit('guild_role_update', null, new selfbot.Role(msg.role))
                             }
-                            this.emit('guild_role_update', old, cache.roles[msg.role.id])
-                        } else {
-                            this.emit('guild_role_update', null, new selfbot.Role(msg.role))
                         }
                         break
                     case 'GUILD_ROLE_DELETE':
-                        if (cache.roles[msg.role.id]) {
-                            this.emit('guild_role_delete', cache.roles[msg.role.id])
+                        if (cache.roles[msg.role_id]) {
+                            this.emit('guild_role_delete', cache.roles[msg.role_id])
                         } else {
                             this.emit('guild_role_delete', msg)
                         }
