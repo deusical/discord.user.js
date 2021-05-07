@@ -224,7 +224,7 @@ class Guild {
     createChannel(cfg) {
         return new Promise((resolve, reject) => {
             selfbot.route('POST', `/guilds/${this.id}/channels`, cfg).then(r => {
-                resolve(cfg.type == 0 ? new TextChannel(r.id) : (cfg.type == 2 ? new VoiceChannel(r.id) : null))
+                resolve(cfg.type == 0 ? new TextChannel(r.id) : (cfg.type == 2 ? new VoiceChannel(r.id) : new TextChannel(r.id)))
             }).catch(e => {
                 reject(e)
             })
@@ -478,7 +478,7 @@ class selfbot {
                         }
                         break
                     case 'CHANNEL_CREATE':
-                        this.emit('gulid_channel_create', type == 0 ? new TextChannel(msg.id) : (type == 2 ? new VoiceChannel(msg.id) : null))
+                        this.emit('gulid_channel_create', msg.type == 0 ? new TextChannel(msg.id) : (msg.type == 2 ? new VoiceChannel(msg.id) : null))
                         break
                     case 'CHANNEL_UPDATE':
                         if (cache.channels[msg.id]) {
